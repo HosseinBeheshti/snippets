@@ -56,6 +56,7 @@ EOF
 
 # Initialize a Git repository
 git init
+git checkout -b main
 
 # Add all files to the staging area
 git add .
