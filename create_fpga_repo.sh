@@ -9,22 +9,26 @@ mkdir -p "$repo_name"
 # Change to the newly created directory
 cd "$repo_name"
 
+# Create the repository sub-directory
 mkdir -p "docs"
 mkdir -p "build"
 mkdir -p "scripts"
+mkdir -p "pl/pl_scripts"
+mkdir -p "pl/ip"
 mkdir -p "pl/hdl"
 mkdir -p "pl/hls"
 mkdir -p "pl/xdc"
-mkdir -p "pl/ip"
 mkdir -p "pl/tcl"
+mkdir -p "ps/ps_scripts"
 mkdir -p "ps/drivers"
 mkdir -p "ps/sw_services"
 mkdir -p "ps/bsp"
 mkdir -p "ps/sw_apps"
 mkdir -p "ps/sw_apps_linux"
-mkdir -p "sim/models"
-mkdir -p "sim/testbenches"
 mkdir -p "sim/libs"
+mkdir -p "sim/models"
+mkdir -p "sim/sim_scripts"
+mkdir -p "sim/testbenches"
 
 # Create a README.md file
 echo "# $repo_name" > README.md
