@@ -44,14 +44,25 @@ done
 
 # Create a .gitignore file
 cat > .gitignore << EOF
-# Example .gitignore file
 *.pyc
 __pycache__/
 .vscode/
+*/.Xil/*
+build/
 *.ipynb
 *.log
 *.txt 
 EOF
+
+# Initialize a Git repository
+git init
+
+# Add all files to the staging area
+git add .
+
+# Commit the initial changes
+git commit -m "Initial commit"
+
 
 
 # Print success message
