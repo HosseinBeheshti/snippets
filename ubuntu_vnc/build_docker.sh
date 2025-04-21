@@ -1,7 +1,6 @@
 #!/bin/bash
-mkdir -p docker
-cd docker
-touch Dockerfile
+mkdir ubuntu-vnc-l2tp
+cd ubuntu-vnc-l2tp
 
 wget https://raw.githubusercontent.com/hossenibeheshti/ubuntu-vnc-l2tp/main/Dockerfile
 

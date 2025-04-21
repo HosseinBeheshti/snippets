@@ -1,45 +1,42 @@
 FROM ubuntu:24.04
 
-# Avoid prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    USER=docker \
+    PASSWORD=docker \
+    HOME=/home/docker
 
-# Update and install necessary packages
+# Install packages
 RUN apt-get update && apt-get install -y \
-    sudo \
-    wget \
-    gnupg \
-    lsb-release \
-    curl \
-    software-properties-common \
-    net-tools \
-    iputils-ping \
-    openvpn \
-    network-manager \
-    network-manager-l2tp \
-    network-manager-l2tp-gnome \
-    xfce4 \
-    xfce4-goodies \
-    tightvncserver \
+    xfce4 xfce4-goodies \
+    tigervnc-standalone-server \
     dbus-x11 \
-    x11-xserver-utils \
+    xterm \
+    sudo \
+    network-manager network-manager-gnome \
+    network-manager-l2tp-gnome \
+    wget curl net-tools \
     && apt-get clean
 
-# Create a user for VNC
-RUN useradd -m docker && echo "docker:docker" | chpasswd && adduser docker sudo
+# Add user
+RUN useradd -m -s /bin/bash $USER && \
+    echo "$USER:$PASSWORD" | chpasswd && \
+    usermod -aG sudo $USER
 
-# Set up VNC server for the docker user
-USER docker
-RUN mkdir -p /home/docker/.vnc
-RUN echo "docker" | vncpasswd -f > /home/docker/.vnc/passwd && \
-    chmod 600 /home/docker/.vnc/passwd
+USER $USER
+WORKDIR /home/$USER
 
-# Set VNC to start XFCE
-RUN echo "#!/bin/bash\nstartxfce4 &" > /home/docker/.vnc/xstartup && \
-    chmod +x /home/docker/.vnc/xstartup
+# Setup VNC password
+RUN mkdir -p /home/$USER/.vnc && \
+    echo $PASSWORD | vncpasswd -f > /home/$USER/.vnc/passwd && \
+    chmod 600 /home/$USER/.vnc/passwd
 
-# Expose VNC port
+# Create xstartup file
+RUN echo '#!/bin/sh\n\
+xrdb $HOME/.Xresources\n\
+startxfce4 &' > /home/$USER/.vnc/xstartup && \
+    chmod +x /home/$USER/.vnc/xstartup
+
 EXPOSE 5901
 
-# Start VNC server on container start
-CMD ["vncserver", ":1", "-geometry", "1280x800", "-depth", "24"]
-
+# Startup VNC automatically
+CMD ["bash", "-c", "vncserver :1 -geometry 1920x1080 -depth 24 && tail -f /home/docker/.vnc/*.log"]
