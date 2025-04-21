@@ -22,15 +22,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a user and set password
-RUN useradd -m -s /bin/bash ubuntu && \
-    echo "ubuntu:ubuntu" | chpasswd && \
-    usermod -aG sudo ubuntu
+RUN useradd -m -s /bin/bash vncuser && \
+    echo "vncuser:vncuser" | chpasswd && \
+    usermod -aG sudo vncuser
 
 # Set up VNC
-USER ubuntu
-WORKDIR /home/ubuntu
+USER vncuser
+WORKDIR /home/vncuser
 RUN mkdir -p .vnc && \
-    echo "ubuntu" | vncpasswd -f > .vnc/passwd && \
+    echo "vncuser" | vncpasswd -f > .vnc/passwd && \
     chmod 600 .vnc/passwd && \
     echo "#!/bin/bash\nxrdb $HOME/.Xresources\nstartxfce4 &" > .vnc/xstartup && \
     chmod +x .vnc/xstartup
