@@ -1,6 +1,6 @@
 # Build and Push Ubuntu VNC L2TP Docker Image
 
-This document outlines the steps to build a Docker image named `hossenibeheshti/ubuntu-vnc-l2tp:24.04` and push it to Docker Hub.
+This document outlines the steps to build a Docker image named `hosseinbeheshti/ubuntu-vnc-l2tp:24.04` and push it to Docker Hub.
 
 ## Prerequisites
 
@@ -31,23 +31,13 @@ This document outlines the steps to build a Docker image named `hossenibeheshti/
     ````
     *(Refer to the official Docker documentation for other installation methods: [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/))*
 
-4.  **Build the Docker Image**
-    Build the image using the `Dockerfile` in the current directory (`.`) and tag it:
-    ````bash
-    docker build -t hossenibeheshti/ubuntu-vnc-l2tp:24.04 .
-    ````
-    *(Replace `hossenibeheshti/ubuntu-vnc-l2tp:24.04` with your desired image name and tag)*
-
-5.  **Log in to Docker Hub**
+4.  **Log in to Docker Hub**
     Log in to your Docker Hub account using your credentials:
     ````bash
     docker login
     ````
     *(You will be prompted for your username and password/token)*
 
-6.  **Push the Docker Image**
-    Push the locally built image to Docker Hub:
     ````bash
-    docker push hossenibeheshti/ubuntu-vnc-l2tp:24.04
+     docker build -t hosseinbeheshti/ubuntu-vnc-l2tp:24.04 . && docker push hosseinbeheshti/ubuntu-vnc-l2tp:24.04
     ````
-    *(Ensure the image name matches the one used in the build step and corresponds to your Docker Hub repository)*
