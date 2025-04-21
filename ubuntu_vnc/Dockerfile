@@ -1,42 +1,45 @@
+# Use Ubuntu 24.04 LTS as base image
 FROM ubuntu:24.04
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    USER=docker \
-    PASSWORD=docker \
-    HOME=/home/docker
+# Set environment variables to avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install packages
+# Update package list and install necessary packages
 RUN apt-get update && apt-get install -y \
-    xfce4 xfce4-goodies \
-    tigervnc-standalone-server \
-    dbus-x11 \
-    xterm \
-    sudo \
-    network-manager network-manager-gnome \
+    xfce4 \
+    xfce4-goodies \
+    tightvncserver \
+    network-manager-l2tp \
     network-manager-l2tp-gnome \
-    wget curl net-tools \
-    && apt-get clean
+    network-manager-strongswan \
+    network-manager-vpnc \
+    network-manager-vpnc-gnome \
+    firefox \
+    sudo \
+    bash \
+    net-tools \
+    iputils-ping \
+    && rm -rf /var/lib/apt/lists/*
 
-# Add user
-RUN useradd -m -s /bin/bash $USER && \
-    echo "$USER:$PASSWORD" | chpasswd && \
-    usermod -aG sudo $USER
+# Create a user and set password
+RUN useradd -m -s /bin/bash ubuntu && \
+    echo "ubuntu:ubuntu" | chpasswd && \
+    usermod -aG sudo ubuntu
 
-USER $USER
-WORKDIR /home/$USER
+# Set up VNC
+USER ubuntu
+WORKDIR /home/ubuntu
+RUN mkdir -p .vnc && \
+    echo "ubuntu" | vncpasswd -f > .vnc/passwd && \
+    chmod 600 .vnc/passwd && \
+    echo "#!/bin/bash\nxrdb $HOME/.Xresources\nstartxfce4 &" > .vnc/xstartup && \
+    chmod +x .vnc/xstartup
 
-# Setup VNC password
-RUN mkdir -p /home/$USER/.vnc && \
-    echo $PASSWORD | vncpasswd -f > /home/$USER/.vnc/passwd && \
-    chmod 600 /home/$USER/.vnc/passwd
-
-# Create xstartup file
-RUN echo '#!/bin/sh\n\
-xrdb $HOME/.Xresources\n\
-startxfce4 &' > /home/$USER/.vnc/xstartup && \
-    chmod +x /home/$USER/.vnc/xstartup
-
+# Expose VNC port
 EXPOSE 5901
 
-# Startup VNC automatically
-CMD ["bash", "-c", "vncserver :1 -geometry 1920x1080 -depth 24 && tail -f /home/docker/.vnc/*.log"]
+# Set up entrypoint
+USER root
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
