@@ -24,10 +24,9 @@ RUN mkdir -p /home/docker/.vnc && \
     chmod +x /home/docker/.vnc/xstartup && \
     chown -R docker:docker /home/docker/.vnc
 
-# Add polkit rule for VPN editing
+# Add polkit JS rule for full network control
 RUN mkdir -p /etc/polkit-1/rules.d && \
     echo "polkit.addRule(function(action, subject) { if (subject.isInGroup('sudo')) { return polkit.Result.YES; } });" > /etc/polkit-1/rules.d/49-nm.rules
-
 
 # Add startup script
 COPY startup.sh /home/docker/startup.sh
