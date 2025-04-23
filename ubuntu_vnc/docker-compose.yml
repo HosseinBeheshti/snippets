@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  ubuntu-gui-l2tp:
+    build: .
+    container_name: ubuntu_gui_l2tp
+    ports:
+      - "5901:5901"       # VNC port
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - DISPLAY=:1
+    restart: unless-stopped

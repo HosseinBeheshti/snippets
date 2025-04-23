@@ -1,3 +1,5 @@
+```bash
+
 # Update package index
 sudo apt-get update
 
@@ -16,5 +18,15 @@ sudo apt-get update
 # Install Docker
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
-# Verify Docker installation
-sudo docker run hello-world
+sudo apt install docker-compose
+```
+
+```bash
+mkdir ubuntu-vpn-gui && cd ubuntu-vpn-gui
+# Save Dockerfile, startup.sh, and docker-compose.yml here
+chmod +x startup.sh
+```
+
+```bash
+docker-compose up --build -d
+```
