@@ -27,5 +27,16 @@ chmod +x startup.sh
 ```
 
 ```bash
-docker-compose up --build -d
+# Build with your tag
+docker-compose build
+
+# Login to Docker Hub
+docker login
+
+# Push your image
+docker push hosseinbeheshti/ubuntu-gui-l2tp:latest
+
+# (Optional) Run it
+docker-compose up -d
+
 ```

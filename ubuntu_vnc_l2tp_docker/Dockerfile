@@ -14,7 +14,7 @@ RUN useradd -m docker && echo "docker:docker" | chpasswd && adduser docker sudo
 
 # Set up VNC password
 RUN mkdir -p /home/docker/.vnc && \
-    echo "hossein" | vncpasswd -f > /home/docker/.vnc/passwd && \
+    echo "mypasswd" | vncpasswd -f > /home/docker/.vnc/passwd && \
     chmod 600 /home/docker/.vnc/passwd && \
     chown -R docker:docker /home/docker/.vnc
 
