@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Start required services
+# Start system services needed for GUI and VPN
 service dbus start
 service NetworkManager start
 
-# Start VNC server for the docker user
-su - docker -c "vncserver :1 -geometry 1920x1080 -depth 24"
+# Start VNC server as docker user
+su - docker -c "vncserver :1 -geometry 1280x800 -depth 24"
 
-# Set terminal emulator default (failsafe setup)
+# Ensure xfce4-terminal is default in XFCE
 su - docker -c "xfconf-query -c xsettings -p /Default/TerminalEmulator -s xfce4-terminal || true"
 
-# Keep container alive
+# Keep container running
 tail -f /dev/null
