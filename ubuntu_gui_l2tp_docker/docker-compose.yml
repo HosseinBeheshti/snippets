@@ -1,7 +1,11 @@
-version: '3'
+version: '3.8'
+
 services:
-  vpn-gui:
-    build: .
+  ubuntu-gui-l2tp:
+    build:
+      context: .
+    container_name: ubuntu-gui-l2tp
     ports:
       - "5901:5901"
+    restart: unless-stopped
     privileged: true
