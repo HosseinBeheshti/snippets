@@ -9,3 +9,9 @@ services:
       - "5901:5901"
     restart: unless-stopped
     privileged: true
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro

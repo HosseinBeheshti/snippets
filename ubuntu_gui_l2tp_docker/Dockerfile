@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     sudo xfce4 xfce4-goodies tightvncserver \
     network-manager network-manager-gnome network-manager-l2tp-gnome \
     bash-completion nano vim curl wget git xterm dbus-x11 \
+    l2tp-ipsec-vpn xl2tpd strongswan libcharon-extra-plugins \
+    policykit-1-gnome \
     && apt-get clean
 
 # Add non-root user
@@ -20,13 +22,19 @@ RUN echo 'if [ -f /etc/bash_completion ]; then . /etc/bash_completion; fi' >> /h
 RUN mkdir -p /home/docker/.vnc && \
     echo "docker" | vncpasswd -f > /home/docker/.vnc/passwd && \
     chmod 600 /home/docker/.vnc/passwd && \
-    echo -e '#!/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &' > /home/docker/.vnc/xstartup && \
+    echo -e '#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nxrdb $HOME/.Xresources\nstartxfce4 &' > /home/docker/.vnc/xstartup && \
     chmod +x /home/docker/.vnc/xstartup && \
     chown -R docker:docker /home/docker/.vnc
 
 # Add polkit JS rule for full network control
 RUN mkdir -p /etc/polkit-1/rules.d && \
-    echo "polkit.addRule(function(action, subject) { if (subject.isInGroup('sudo')) { return polkit.Result.YES; } });" > /etc/polkit-1/rules.d/49-nm.rules
+    echo "polkit.addRule(function(action, subject) { if (action.id.indexOf('org.freedesktop.NetworkManager.') == 0 && subject.isInGroup('sudo')) { return polkit.Result.YES; } });" > /etc/polkit-1/rules.d/49-nm.rules
+
+# Create necessary directories and permissions
+RUN mkdir -p /run/dbus && \
+    mkdir -p /var/run/dbus && \
+    chown messagebus:messagebus /run/dbus && \
+    chown messagebus:messagebus /var/run/dbus
 
 # Add startup script
 COPY startup.sh /home/docker/startup.sh
