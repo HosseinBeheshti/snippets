@@ -4,14 +4,8 @@ services:
   ubuntu-gui-l2tp:
     build:
       context: .
-      dockerfile: Dockerfile
-    image: hosseinbeheshti/ubuntu-gui-l2tp:latest
-    container_name: ubuntu_gui_l2tp
+    container_name: ubuntu-gui-l2tp
     ports:
-      - "5901:5901"       # VNC port
-    privileged: true       # Required for NetworkManager and VPN
-    cap_add:
-      - NET_ADMIN          # Required for VPN
-    environment:
-      - DISPLAY=:1
+      - "5901:5901"
     restart: unless-stopped
+    privileged: true
