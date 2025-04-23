@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     xfce4 xfce4-goodies tightvncserver \
     network-manager network-manager-gnome network-manager-l2tp-gnome \
     xfce4-terminal xterm \
-    dbus-x11 x11-xserver-utils sudo curl nano wget iproute2 \
+    dbus-x11 x11-xserver-utils sudo curl vim wget iproute2 \
     && apt-get clean
 
 # Create a user
