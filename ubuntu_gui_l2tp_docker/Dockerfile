@@ -25,8 +25,13 @@ RUN mkdir -p /home/docker/.vnc && \
     chown -R docker:docker /home/docker/.vnc
 
 # Add polkit rule for VPN editing
-RUN mkdir -p /etc/polkit-1/localauthority/50-local.d/ && \
-    echo "[Allow user to manage network]\nIdentity=unix-user:docker\nAction=org.freedesktop.NetworkManager.*\nResultAny=yes\nResultInactive=yes\nResultActive=yes" > /etc/polkit-1/localauthority/50-local.d/10-network.pkla
+# NEW (recommended way in modern Ubuntu)
+RUN mkdir -p /etc/polkit-1/rules.d && \
+    echo "polkit.addRule(function(action, subject) {
+        if (subject.isInGroup('sudo')) {
+            return polkit.Result.YES;
+        }
+    });" > /etc/polkit-1/rules.d/49-nm.rules
 
 # Add startup script
 COPY startup.sh /home/docker/startup.sh
