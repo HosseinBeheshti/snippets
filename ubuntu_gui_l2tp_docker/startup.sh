@@ -1,77 +1,68 @@
 #!/bin/bash
-set -e
 
-# Start D-Bus System Service (Needed by NetworkManager)
-# Check if running as root for system service start
-if [ "$(id -u)" = "0" ]; then
-   echo "Error: This script should be run as the 'ubuntu' user, not root."
-   exit 1
-fi
-# Attempt to start dbus using sudo
-sudo service dbus start || echo "DBus already running or failed to start."
+# Set VNC password (ensure this is secure)
+VNC_PASSWD="MyDockerTest"
+echo "Setting VNC password..."
+mkdir -p /home/ubuntu/.vnc
+echo "$VNC_PASSWD" | vncpasswd -f > /home/ubuntu/.vnc/passwd
+chmod 600 /home/ubuntu/.vnc/passwd
 
-# VNC Password Setup
-VNC_DIR="$HOME/.vnc"
-VNC_PASSWD_FILE="$VNC_DIR/passwd"
-VNC_STARTUP_FILE="$VNC_DIR/xstartup"
-VNC_LOG_FILE="$HOME/.vnc/$(hostname):1.log" # Path depends on hostname inside container
+# Create the xstartup script for VNC
+echo "Creating VNC xstartup script..."
+cat << EOF > /home/ubuntu/.vnc/xstartup
+#!/bin/sh
 
-mkdir -p "$VNC_DIR"
-chmod 700 "$VNC_DIR"
-touch "$VNC_PASSWD_FILE"
-chmod 600 "$VNC_PASSWD_FILE"
+# Log file for xstartup debugging
+XSTARTUP_LOG="/home/ubuntu/.vnc/xstartup.log"
+echo "--- xstartup started at \$(date) ---" > \$XSTARTUP_LOG
+echo "DISPLAY variable is initially: \$DISPLAY" >> \$XSTARTUP_LOG
 
-# Set VNC password if VNC_PASSWORD env var is set
-if [ -n "$VNC_PASSWORD" ]; then
-  echo "Setting VNC password..."
-  echo "$VNC_PASSWORD" | vncpasswd -f > "$VNC_PASSWD_FILE"
-else
-  echo "Warning: VNC_PASSWORD environment variable not set. VNC password not configured."
-  echo "         You may need to set it manually on first connection or container start."
-fi
+# Explicitly set DISPLAY (vncserver should do this, but let's be sure)
+export DISPLAY=:1
+echo "DISPLAY variable set to: \$DISPLAY" >> \$XSTARTUP_LOG
 
-# Create xstartup file if it doesn't exist
-if [ ! -f "$VNC_STARTUP_FILE" ]; then
-  echo "Creating default xstartup script..."
-  cat <<EOF > "$VNC_STARTUP_FILE"
-#!/bin/bash
+# Unset potentially problematic session variables
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
-# Fix for some keyboard layouts issues
-export XKL_XMODMAP_DISABLE=1
+export XDG_CURRENT_DESKTOP="XFCE"
+export XDG_SESSION_TYPE=x11
 
-# Source Xresources if it exists
-[ -x /etc/vnc/xstartup ] && exec /etc/vnc/xstartup
-[ -r \$HOME/.Xresources ] && xrdb \$HOME/.Xresources
+# Source environment variables to ensure PATH is set correctly
+echo "Sourcing profile..." >> \$XSTARTUP_LOG
+[ -r /etc/profile ] && . /etc/profile
+echo "Sourcing bashrc..." >> \$XSTARTUP_LOG
+[ -r /home/ubuntu/.bashrc ] && . /home/ubuntu/.bashrc
+echo "PATH is now: \$PATH" >> \$XSTARTUP_LOG
 
-# Start the XFCE Desktop Environment
-startxfce4 &
+# Add a small delay to allow the X server to fully initialize
+echo "Waiting 1 second..." >> \$XSTARTUP_LOG
+sleep 1
 
-# Start Network Manager Applet (for VPN GUI in panel)
-nm-applet &
+# Attempt to load X resources (optional, but good test)
+echo "Running xrdb..." >> \$XSTARTUP_LOG
+xrdb -merge /home/ubuntu/.Xresources >> \$XSTARTUP_LOG 2>&1
+
+# Start the XFCE desktop environment in the background
+echo "Starting XFCE (startxfce4)..." >> \$XSTARTUP_LOG
+startxfce4 >> \$XSTARTUP_LOG 2>&1 &
+
+echo "--- xstartup finished at \$(date) ---" >> \$XSTARTUP_LOG
 EOF
-  chmod +x "$VNC_STARTUP_FILE"
-fi
+chmod +x /home/ubuntu/.vnc/xstartup
 
-# Start TigerVNC Server
-echo "Starting VNC server on display :1 (port 5901)..."
-# -localhost no : Allows connections from any interface (needed due to Docker networking)
-# -fg           : Runs VNC server in the foreground (Alternative to tailing log)
-# -desktop name : Sets the name that appears in the VNC client
-# -SecurityTypes VncAuth : Use standard VNC password authentication
-vncserver :1 -geometry 1920x1080 -depth 24 -localhost no -SecurityTypes VncAuth -desktop UbuntuVNC
+# Start D-Bus session bus (important for many desktop components)
+# Run this in the main script's environment, not xstartup
+echo "Starting D-Bus session..."
+eval $(dbus-launch --sh-syntax)
+export DBUS_SESSION_BUS_ADDRESS
 
-echo "VNC server started. Connect using VNC Client to <host-ip>:5901"
-echo "Password is the value set in VNC_PASSWORD environment variable."
+# Start VNC server on display :1
+echo "Starting VNC server on display :1..."
 
-# Keep container running by tailing the VNC log file
-echo "Tailing VNC log file: ${VNC_LOG_FILE}..."
-# Wait a moment for the log file to be created
-sleep 5
-if [ -f "${VNC_LOG_FILE}" ]; then
-  tail -f "${VNC_LOG_FILE}"
-else
-  echo "Warning: VNC log file not found at ${VNC_LOG_FILE}. Keeping container alive with sleep loop."
-  # Fallback to keep container running if log file isn't found
-  while true; do sleep 3600; done
-fi
+# Use -fg to run in foreground if tailing logs isn't desired, but tailing is usually better for Docker
+vncserver :1 -geometry 1280x800 -depth 24 -localhost no -log /home/ubuntu/.vnc/vncserver.log
+
+# Keep the container running and display logs
+echo "VNC server started. Tailing logs..."
+# Tail both the main VNC server log and the xstartup log
+tail -f /home/ubuntu/.vnc/*.log

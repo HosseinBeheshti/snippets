@@ -23,6 +23,7 @@ RUN apt-get update && \
     xubuntu-desktop \
     tigervnc-standalone-server \
     tigervnc-common \
+    tigervnc-tools \ 
     # --- L2TP VPN Client GUI ---
     network-manager-l2tp-gnome \
     # --- Cleanup ---
@@ -41,6 +42,9 @@ RUN echo "ubuntu:ubuntu" | chpasswd && \
     usermod -aG sudo ubuntu && \
     mkdir -p /home/ubuntu && \
     chown -R ubuntu:ubuntu /home/ubuntu
+
+# Allow the 'ubuntu' user to run sudo commands without a password
+RUN echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Switch to the non-root user
 USER ubuntu
