@@ -1,17 +1,35 @@
 version: '3.8'
 
 services:
-  ubuntu-gui-l2tp:
-    build:
-      context: .
-    container_name: ubuntu-gui-l2tp
-    ports:
-      - "5901:5901"
-    restart: unless-stopped
-    privileged: true
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun
+  ubuntu-desktop:
+    build: .
+    container_name: ubuntu_desktop_l2tp
+    # !!! CRITICAL for VPN !!!
+    # Shares the host's network namespace. Required for VPN clients
+    # to modify routing tables and network interfaces properly.
+    # Security implication: Container processes can access host network interfaces.
+    network_mode: "host"
+    # Ports are not mapped in host mode, container directly uses host ports.
+    # If not using host mode (NOT recommended for VPN client), you'd map ports:
+    # ports:
+    #   - "5901:5901"
+    environment:
+      # --- SET A STRONG VNC PASSWORD HERE ---
+      - VNC_PASSWORD=YourSecretPassword!
+      # Set display for GUI apps if needed (usually automatic in VNC)
+      # - DISPLAY=:1
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      # Persist user home directory
+      - user_home:/home/ubuntu
+    # Allocate more shared memory (beneficial for GUI applications)
+    shm_size: '2gb'
+    # Add capabilities (may be needed if NOT using host mode, less effective)
+    # cap_add:
+    #   - NET_ADMIN
+    #   - SYS_ADMIN # Potentially needed for some low-level network ops
+    # Or for maximum privilege (use with extreme caution):
+    # privileged: true
+    restart: unless-stopped
+
+volumes:
+  user_home: # Define the named volume for persistence

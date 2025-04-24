@@ -1,47 +1,54 @@
-FROM ubuntu:22.04
+# Use Ubuntu 24.04 LTS (Noble Numbat) as the base image
+FROM ubuntu:24.04
 
+LABEL maintainer="Your Name <your.email@example.com>"
+LABEL description="Ubuntu 24.04 Desktop (XFCE) with VNC and L2TP VPN Client GUI"
+
+# Prevent interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install core packages
-RUN apt-get update && apt-get install -y \
-    sudo xfce4 xfce4-goodies tightvncserver \
-    network-manager network-manager-gnome network-manager-l2tp-gnome \
-    bash-completion nano vim curl wget git xterm dbus-x11 \
-    l2tp-ipsec-vpn xl2tpd strongswan libcharon-extra-plugins \
-    policykit-1-gnome \
-    && apt-get clean
+# Set timezone (Optional, but recommended for GUI apps)
+ENV TZ=Etc/UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Add non-root user
-RUN useradd -m docker && echo "docker:docker" | chpasswd && adduser docker sudo
+# Update package lists and install prerequisites
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    sudo \
+    wget \
+    locales \
+    tzdata \
+    dbus-x11 \
+    # --- Desktop Environment and VNC ---
+    xubuntu-desktop \
+    tigervnc-standalone-server \
+    tigervnc-common \
+    # --- L2TP VPN Client GUI ---
+    network-manager-l2tp-gnome \
+    # --- Cleanup ---
+    && apt-get autoclean && apt-get autoremove && rm -rf /var/lib/apt/lists/*
 
-# Setup bash completion
-RUN echo 'if [ -f /etc/bash_completion ]; then . /etc/bash_completion; fi' >> /home/docker/.bashrc && \
-    cp /home/docker/.bashrc /root/.bashrc
+# Set up locale
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
 
-# Set VNC password & startup
-RUN mkdir -p /home/docker/.vnc && \
-    echo "docker" | vncpasswd -f > /home/docker/.vnc/passwd && \
-    chmod 600 /home/docker/.vnc/passwd && \
-    echo -e '#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nxrdb $HOME/.Xresources\nstartxfce4 &' > /home/docker/.vnc/xstartup && \
-    chmod +x /home/docker/.vnc/xstartup && \
-    chown -R docker:docker /home/docker/.vnc
+# Create a non-root user 'ubuntu' with password 'ubuntu' and sudo access
+RUN useradd -m -s /bin/bash ubuntu && \
+    echo "ubuntu:ubuntu" | chpasswd && \
+    adduser ubuntu sudo
 
-# Add polkit JS rule for full network control
-RUN mkdir -p /etc/polkit-1/rules.d && \
-    echo "polkit.addRule(function(action, subject) { if (action.id.indexOf('org.freedesktop.NetworkManager.') == 0 && subject.isInGroup('sudo')) { return polkit.Result.YES; } });" > /etc/polkit-1/rules.d/49-nm.rules
+# Switch to the non-root user
+USER ubuntu
+WORKDIR /home/ubuntu
 
-# Create necessary directories and permissions
-RUN mkdir -p /run/dbus && \
-    mkdir -p /var/run/dbus && \
-    chown messagebus:messagebus /run/dbus && \
-    chown messagebus:messagebus /var/run/dbus
+# Copy the startup script
+COPY --chown=ubuntu:ubuntu startup.sh /startup.sh
+RUN chmod +x /startup.sh
 
-# Add startup script
-COPY startup.sh /home/docker/startup.sh
-RUN chmod +x /home/docker/startup.sh && chown docker:docker /home/docker/startup.sh
-
-# Expose VNC
+# Expose VNC port (Display :1 -> Port 5901)
 EXPOSE 5901
-ENV DISPLAY=:1
 
-CMD ["/home/docker/startup.sh"]
+# Set the default command to run the startup script
+CMD ["/startup.sh"]
