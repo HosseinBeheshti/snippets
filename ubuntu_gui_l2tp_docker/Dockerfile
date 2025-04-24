@@ -34,10 +34,13 @@ ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 
-# Create a non-root user 'ubuntu' with password 'ubuntu' and sudo access
-RUN useradd -m -s /bin/bash ubuntu && \
-    echo "ubuntu:ubuntu" | chpasswd && \
-    adduser ubuntu sudo
+# The ubuntu:24.04 base image often includes an 'ubuntu' user.
+# Set a known password and ensure it's in the sudo group.
+# Also ensure the home directory exists and has correct ownership.
+RUN echo "ubuntu:ubuntu" | chpasswd && \
+    usermod -aG sudo ubuntu && \
+    mkdir -p /home/ubuntu && \
+    chown -R ubuntu:ubuntu /home/ubuntu
 
 # Switch to the non-root user
 USER ubuntu
