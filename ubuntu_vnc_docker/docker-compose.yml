@@ -3,7 +3,7 @@ version: '3.8'
 services:
   ubuntu-desktop:
     build: .
-    container_name: ubuntu_desktop_l2tp
+    container_name: ubuntu_desktop
     # !!! CRITICAL for VPN !!!
     # Shares the host's network namespace. Required for VPN clients
     # to modify routing tables and network interfaces properly.
@@ -15,14 +15,14 @@ services:
     #   - "5901:5901"
     environment:
       # --- SET A STRONG VNC PASSWORD HERE ---
-      - VNC_PASSWORD=YourSecretPassword!
+      - VNC_PASSWORD=hossein
       # Set display for GUI apps if needed (usually automatic in VNC)
       # - DISPLAY=:1
     volumes:
       # Persist user home directory
       - user_home:/home/ubuntu
     # Allocate more shared memory (beneficial for GUI applications)
-    shm_size: '2gb'
+    shm_size: '4gb'
     # Add capabilities (may be needed if NOT using host mode, less effective)
     # cap_add:
     #   - NET_ADMIN

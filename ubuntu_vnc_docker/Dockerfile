@@ -1,8 +1,8 @@
 # Use Ubuntu 24.04 LTS (Noble Numbat) as the base image
 FROM ubuntu:24.04
 
-LABEL maintainer="Your Name <your.email@example.com>"
-LABEL description="Ubuntu 24.04 Desktop (XFCE) with VNC and L2TP VPN Client GUI"
+LABEL maintainer="HosseinBeheshti"
+LABEL description="Ubuntu 24.04 Desktop (XFCE) with VNC"
 
 # Prevent interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -24,8 +24,6 @@ RUN apt-get update && \
     tigervnc-standalone-server \
     tigervnc-common \
     tigervnc-tools \ 
-    # --- L2TP VPN Client GUI ---
-    network-manager-l2tp-gnome \
     # --- Cleanup ---
     && apt-get autoclean && apt-get autoremove && rm -rf /var/lib/apt/lists/*
 
